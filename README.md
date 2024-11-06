@@ -1,0 +1,3 @@
+"algebraiSlover"
+"algebraicSolver"
+"mathSolver"

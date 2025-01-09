@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <title>Algebraic Solutions</title>
+    <link rel="stylesheet" type="text/css" href="feet.css">
+    <style>
+        /* Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Basic body styles */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        /* Main container */
+        .container {
+            background-color: #ffffff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            padding: 20px;
+            max-width: 600px;
+            width: 90%;
+            margin: 20px auto;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        h1 {
+            color: #333333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        input[type="text"] {
+            padding: 8px;
+            font-size: 16px;
+            border: 1px solid #cccccc;
+            border-radius: 4px;
+            width: 100%;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+
+        button.secondary {
+            background-color: #4CAF50;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        button.secondary:hover {
+            background-color: #0056b3;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-left: 4px solid #4CAF50;
+        }
+
+        /* Footer styles */
+        footer {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-top: auto;
+            overflow-y: auto;
+        }
+
+        .footer-content {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            gap: 20px;
+        }
+
+        .footer-column {
+            text-align: left;
+        }
+
+        .footer-column ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .footer-column ul li a {
+            color: white;
+            text-decoration: none;
+        }
+
+        .footer-column ul li a:hover {
+            text-decoration: underline;
+        }
+
+        .footer-social-icon {
+            margin: 0 5px;
+            vertical-align: middle;
+        }
+
+        /* LaTeX fix */
+        .latex-container {
+            overflow-x: auto;
+            word-wrap: break-word;
+        }
+    </style>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Answers to x,y,z calculus</h1>
+        <form method="POST">
+            <label for="expression">Enter a Mathematical Expression:</label>
+            <input type="text" name="expression" id="expression" placeholder="e.g., x**2 + 3*x + 1" required>
+            <div>
+                <button name="operation" value="expand">Expand</button>
+                <button name="operation" value="lim">lim</button>
+                <button name="operation" value="simplify">Simplify</button>
+                <button name="operation" value="rationalize">Rationalize</button>
+                <button name="operation" value="factorize">Factorize</button>
+                <button name="operation" value="diffx">Dx</button>
+                <button name="operation" value="diffy">Dy</button>
+                <button name="operation" value="diffz">Dz</button>
+                <button name="operation" value="solve">Solve</button>
+                <button name="operation" value="integratex" class="secondary">Integrate(x)</button>
+                <button name="operation" value="integratey" class="secondary">Integrate(y)</button>
+                <button name="operation" value="integratez" class="secondary">Integrate(z)</button>
+                <button name="operation" value="ode" class="secondary">Solve ODE</button>
+                <button name="operation" value="limit" class="secondary">lim</button>
+                <button name="operation" value="series" class="secondary">Expand Series</button>
+            </div>
+        </form>
+        
+        {% if result is not none %}
+    <div class="result latex-container">
+        {% if latex_result %}
+            <p>Answer:</p>
+            <p>$$ {{ latex_result }} $$</p>
+        {% endif %}
+       </div>
+    {% endif %}
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-column">
+                <p>P.O. Roma 180</p>
+                <p>Roma, Lesotho</p>
+                <p>Email: zmmandla24@gmail.com</p>
+                <p>Phone: +266 6397 3129</p>
+            </div>
+            <div class="footer-column">
+                <h3>Links</h3>
+                <ul>
+                    <li><a href="#">Home</a></li>
+                    <li><a href="https://motaunginc.vercel.app">Services</a></li>
+                    <li><a href="https://motaungmandla.github.io">About us</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h3>Connect</h3>
+                <ul class="social_team">
+                           <li><a href="https://discord.gg/dkb6cFR2" aria-hidden="true"></i>Discord Server</a></li>
+                           <li><a href="https://www.facebook.com/profile.php?id=100022011589532"><i class="fa fa-facebook"><i class="fa fa-twitter" aria-hidden="true"></i>Facebook</a></li>
+                           <li><a href="https://www.linkedin.com/in/mandla-motaung-5b5a88329/"><i class="fa fa-linkedin" aria-hidden="true"></i>Linkedin</a></li>
+                           <li><a href="#"><i class="fa fa-instagram" aria-hidden="true"></i></a></li>
+                        </ul>
+            </div>
+        </div>
+        <p>&copy; Mandla Zwane Motaung 2024 - All Rights Reserved</p>
+    </footer>
+    
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat with Shanks</title>
+    <style>
+        /* Chatbot Button Position */
+        #chatbot-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        #chatbot-button button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        .chatbot-popup {
+            display: none;
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 400px;  /* Increased width */
+            background-color: white;
+            border: 1px solid #ddd;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            z-index: 999;
+            max-height: 500px;  /* Increased max height */
+        }
+
+        .chatbot-header {
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+        }
+
+        .chatbot-body {
+            padding: 10px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .chatbot-body input {
+            width: 100%;
+            padding: 8px;
+            margin-top: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .chatbot-body button {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+    </style>
+    <script>
+        // Function to toggle the visibility of the chatbot pop-up
+        function toggleChat() {
+            const chatbotPopup = document.getElementById('chatbot-popup');
+            chatbotPopup.style.display = (chatbotPopup.style.display === 'none' || chatbotPopup.style.display === '') ? 'block' : 'none';
+        }
+
+        // Function to handle sending messages
+        function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const message = input.value;
+
+            if (message) {
+                // Show the message in the chat area
+                const chatbotMessages = document.getElementById('chatbot-messages');
+                const messageElement = document.createElement('div');
+                messageElement.textContent = `You: ${message}`;
+                chatbotMessages.appendChild(messageElement);
+
+                // Clear the input field
+                input.value = '';
+
+                // Send the message to the Flask API
+                fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message: message })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const responseElement = document.createElement('div');
+                    responseElement.textContent = `Chatbot: ${data.response}`;
+                    chatbotMessages.appendChild(responseElement);
+                })
+                .catch(error => console.error('Error:', error));
+            }
+        }
+    </script>
+</head>
+<body>
+    <!-- Chatbot Button -->
+    <div id="chatbot-button">
+        <button onclick="toggleChat()">Ask ChatBot</button>
+    </div>
+
+    <!-- Chatbot Popup -->
+    <div id="chatbot-popup" class="chatbot-popup">
+        <div class="chatbot-header">
+            <span>Shanks</span>
+            <button onclick="toggleChat()">X</button>
+        </div>
+        <div class="chatbot-body">
+            <div id="chatbot-messages">
+                <!-- Chat messages will appear here -->
+            </div>
+            <input type="text" id="chat-input" placeholder="Type a message..." />
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+</body>
+</html>
+
+
+</body>
+</html>

@@ -1,248 +1,146 @@
+from flask import Flask, render_template, request, jsonify
+import sympy as sm
+import re  
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import json
+import numpy as np
+from sklearn.preprocessing import LabelEncoder
+from sklearn.feature_extraction.text import CountVectorizer
 
-from math import factorial, e, pi
-import sympy as smp
-from kivy.app import App
-from kivy.uix.boxlayout import BoxLayout
-from kivy.properties import StringProperty
-from re import match, sub
+# Existing code setup
+app = Flask(__name__)
+x, y, z = sm.symbols('x y z')
 
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    result = None
+    expression = ''
+    operation = ''
+    latex_result = ''
 
-class Functionality(BoxLayout):
-    def __init__(self, **kwargs):
-        super(Functionality, self).__init__(**kwargs)
+    if request.method == 'POST':
+        expression = request.form['expression']
+        operation = request.form['operation']
+        
+        # Replace e**x with exp(x) to make sure SymPy interprets it correctly
+        expression = re.sub(r'e\*\*([a-zA-Z0-9_]+)', r'exp(\1)', expression)
 
+        # Insert an asterisk between numbers and letters using regex
+        expression = re.sub(r'(\d)([a-zA-Z])', r'\1*\2', expression)
 
-class BoxLayouts(BoxLayout):
-    my_expr = StringProperty()
-
-    def entries(self, widget):
-        self.my_expr += str(widget.text)
-
-    def on_factorial(self):
         try:
-            if int(self.my_expr) > 366:
-                self.my_expr = "Value Too Large!"
-                return None
-            self.my_expr = str(factorial(int(self.my_expr)))
-        except ValueError:
-            self.my_expr = "Invalid Input"
-            return None
+            expr = sm.sympify(expression)
+            if operation == 'diff':
+                result = sm.diff(expr, x)
+            elif operation == 'expand':
+                result = sm.expand(expr)
+            elif operation == 'solve':
+                result = sm.solve(expr, x)
+            elif operation == 'simplify':
+                result = sm.simplify(expr)
+            elif operation == 'factorize':
+                result = sm.factorize(expr)
+            elif operation == 'rationalize':
+                result = sm.rationalize(expr)
+            elif operation == 'diffx':
+                result = sm.diff(expr, x)
+            elif operation == 'diffy':
+                result = sm.diff(expr, y)
+            elif operation == 'diffz':
+                result = sm.diff(expr, z)
+            elif operation == 'integratex':
+                # Perform the integration
+                integral_result = sm.integrate(expr, x)
+                # Format the result with C after the variables (if not empty)
+                if integral_result != 0:
+                    result = sm.sympify(f"{integral_result} + C")
+                else:
+                    result = "C"  # If the integral is zero, just return C
+            elif operation == 'integratey':
+                integral_result = sm.integrate(expr, y)
+                if integral_result != 0:
+                    result = sm.sympify(f"{integral_result} + C")
+                else:
+                    result = "C"
+            elif operation == 'integratez':
+                integral_result = sm.integrate(expr, z)
+                if integral_result != 0:
+                    result = sm.sympify(f"{integral_result} + C")
+                else:
+                    result = "C"
+            
+            latex_result = sm.latex(result)
 
-    def on_simplify(self):
-        try:
-            if self.my_expr == '':
-                return None
-            self.my_expr = str(smp.simplify(eval(self.my_expr)))
-            if "/" in self.my_expr:
-                self.my_expr = str(float(self.my_expr))
-            if match(r'(\d+)([a-z]+)', self.my_expr):
-                self.my_expr = "Math Error!"
-        finally:
-            return 0
+        except Exception as e:
+            result = f"Error: {str(e)}"
+            latex_result = None
 
-    def constant_pi_e(self):
-        while True:
-            if "π" in self.my_expr:
-                self.my_expr = self.my_expr.replace("π", str(pi))
-            if "e" in self.my_expr:
-                self.my_expr = self.my_expr.replace("e", str(e))
-            break
+    return render_template('index.html', result=result, expression=expression, latex_result=latex_result)
 
-    def backspacing(self):
-        self.my_expr = sub(r'\w$', '', self.my_expr)
-        self.my_expr = sub(r'\W$', '', self.my_expr)
+# Chatbot integration
 
-    def modify(self, match):
-        letter, number = match.groups()
-        val = str(number) + '*' + letter
-        return val
+# Define the model class
+class ChatModel(nn.Module):
+    def __init__(self, input_size, hidden_size, output_size):
+        super(ChatModel, self).__init__()
+        self.hidden_size = hidden_size
+        self.fc1 = nn.Linear(input_size, hidden_size)
+        self.fc2 = nn.Linear(hidden_size, output_size)
 
-    def special_functions(self):
-        self.my_expr = sub(r'sin', str(smp.sin), self.my_expr)
-        self.my_expr = sub(r"∞", str(smp.oo), self.my_expr)
-        self.my_expr = sub(r'lim', str(smp.limit), self.my_expr)
-        self.my_expr = sub(r'cos', str(smp.cos), self.my_expr)
-        self.my_expr = sub(r'tan', str(smp.tan), self.my_expr)
-        self.my_expr = sub(r'log', str(smp.log), self.my_expr)
-        self.my_expr = sub(r'arcsin', str(smp.asin), self.my_expr)
-        self.my_expr = sub(r'arccos', str(smp.acos), self.my_expr)
-        self.my_expr = sub(r'arctan', str(smp.atan), self.my_expr)
-        self.my_expr = sub(r'sinh', str(smp.sinh), self.my_expr)
-        self.my_expr = sub(r'cosh', str(smp.cosh), self.my_expr)
-        self.my_expr = sub(r'tanh', str(smp.tanh), self.my_expr)
-        self.my_expr = sub(r'atanh', str(smp.atanh), self.my_expr)
-        self.my_expr = sub(r'asinh', str(smp.asinh), self.my_expr)
-        self.my_expr = sub(r'acosh', str(smp.acosh), self.my_expr)
-        self.my_expr = sub(r'integrate', str(smp.integrate), self.my_expr)
-        self.my_expr = sub(r'∞', str(smp.zoo), self.my_expr)
-        self.my_expr = sub(r'∞', str(00), self.my_expr)
+    def forward(self, x):
+        x = F.relu(self.fc1(x))
+        x = self.fc2(x)
+        return x
 
-        if int(self.my_expr.count("(")) != int(self.my_expr.count(")")):
-            while int(self.my_expr.count("(")) < int(self.my_expr.count(")")):
-                self.my_expr += "("
-                break
-            while int(self.my_expr.count("(")) > int(self.my_expr.count(")")):
-                self.my_expr += ")"
-                break
+# Load JSON data
+with open('intents.json', 'r') as file:
+    data = json.load(file)
 
-    def calculus_integration_with_resp_to_y(self):
-        if not self.my_expr:
-            return None
+# Extract patterns and labels
+patterns = []
+labels = []
+for intent in data['intents']:
+    for pattern in intent['patterns']:
+        patterns.append(pattern)
+        labels.append(intent['intent'])
 
-        if self.my_expr:
-            self.my_expr = sub(r'(\d+)([a-z]+)', self.modify, (self.my_expr))
-            self.my_expr = sub(r'([a-zA-Z]+)(\d+)', self.modify_again, (self.my_expr))
-            self.special_functions()
-            x, y, z = smp.symbols('x y z')
-            self.my_expr = str(smp.integrate(self.my_expr, y)) + " + C"
-        if "**" in self.my_expr:
-            self.my_expr = self.my_expr.replace("**", "^")
-        elif "*" in self.my_expr:
-            self.my_expr = self.my_expr.replace("*", "")
+# Tokenize patterns
+vectorizer = CountVectorizer()
+X = vectorizer.fit_transform(patterns).toarray()
 
-    def do_lim(self):
-        self.special_functions()
-        x = smp.symbols('x')
-        self.my_expr = str(smp.limit(self.my_expr, x, 00))
+# Encode labels
+label_encoder = LabelEncoder()
+label_encoder.fit(labels)
 
-    def limits_function(self):
-        self.special_functions()
-        x = smp.symbols('x')
-        if match(r'-$', self.my_expr):
-            self.my_expr = str(smp.limit(self.my_expr, x, self.rules, dir="-"))
-        else:
-            self.my_expr = str(smp.limit(self.my_expr, x, self.rules, dir="+"))
+# Set model parameters
+input_size = X.shape[1]
+hidden_size = 8
+output_size = len(set(labels))
 
-    def calculator_help(self):
-        from tkinter import Label, Tk
-        root = Tk()
-        root.title("IMPORTANT NOTE")
+# Load the model
+model = ChatModel(input_size, hidden_size, output_size)
+model.load_state_dict(torch.load('Shanks.pth'))
+model.eval()
 
-        Label(root, text="In your expressions, try not to omit the multiplication sign(*).\n"
-                           "Examples:\n Type 7*x instead of 7x.\n"
-                           "Type sin(x)*cos(x) not sin(x)cos(x).\n"
-                           "(x)(y) should be typed in as (x)*(y).\n"
-                           "Clear the screen before you start a new calculation."
-                            , bg="indigo", fg="magenta", font=('sans', 12)).pack()
-        root.mainloop()
+def get_response(message):
+    message_vector = vectorizer.transform([message]).toarray()
+    message_tensor = torch.tensor(message_vector, dtype=torch.float32)
+    output = model(message_tensor)
+    _, predicted = torch.max(output, 1)
+    intent = label_encoder.inverse_transform(predicted.numpy())[0]
 
-    def ln_information(self):
-        from tkinter import Label, Tk
-        mandla = Tk()
-        mandla.title("Help Window")
-        message = Label(mandla, text="Changing from base 'e'.\n\n\n"
-                                     "To change the base of your log,\n\n"
-                                     "follow the examples below:\n\n"
-                                     "The format: log(your number, base)\n\n"
-                                     "example_1: log(100, 10)\n\n"
-                                     "example_2: log(29, 2)", font=30, bg="sky blue")
-        message.pack()
-        mandla.mainloop()
+    for intent_data in data['intents']:
+        if intent_data['intent'] == intent:
+            response = np.random.choice(intent_data['responses'])
+            return response
 
-    def modify_again(self, match):
-        letter, number = match.groups()
-        val = letter + '**' + str(number)
-        return val
+@app.route('/chat', methods=['POST'])
+def chat():
+    user_message = request.json['message']
+    response = get_response(user_message)
+    return jsonify({'response': response})
 
-    def sign_errors(self):
-        if match(r'(\+)?=[*/\-]', self.my_expr) or match(r'(\*)?=[-*/+]', self.my_expr) or match(r'(/)?=[+*/-]',
-                                                                                                 self.my_expr) or match(
-                r'(-)?=[-+*/]', self.my_expr):
-            self.my_expr = "Input Error!"
-            return 0
-
-    def check_buffer(self):
-        if "∞" in self.my_expr:
-            self.my_expr = sub(r"∞", "00", self.my_expr)
-        if self.my_expr != "":
-            while len(self.my_expr) > 0:
-                list(self.my_expr).pop()
-                break
-
-    def calculus_integration_with_resp_to_x(self):
-        if not self.my_expr:
-            return None
-
-        if self.my_expr:
-            self.my_expr = sub(r'(\d+)([a-z]+)', self.modify, (self.my_expr))
-            self.my_expr = sub(r'([a-zA-Z]+)(\d+)', self.modify_again, (self.my_expr))
-            self.special_functions()
-            x, y, z = smp.symbols('x y z')
-            self.my_expr = str(smp.integrate(self.my_expr, x)) + " + C"
-        if "**" in self.my_expr:
-            self.my_expr = self.my_expr.replace("**", "^")
-        elif "*" in self.my_expr:
-            self.my_expr = self.my_expr.replace("*", "")
-        return 0
-
-    def differential_calculus_x(self):
-        if self.my_expr:
-            self.special_functions()
-            x, y, z = smp.symbols('x y z')
-            self.my_expr = str(smp.diff(self.my_expr, x))
-        return None
-
-    def differential_calculus_y(self):
-        if self.my_expr:
-            self.special_functions()
-            x, y, z = smp.symbols('x y z')
-            self.my_expr = str(smp.diff(self.my_expr, y))
-        return 0
-
-    def equal_sign(self):
-        self.constant_pi_e()
-        self.check_buffer()
-        self.sign_errors()
-        # self.ids.text = str(0)
-        x, y, z = smp.symbols('x y z')
-        self.special_functions()
-
-        if self.my_expr == '':
-            self.my_expr = str(0)
-        else:
-            self.my_expr = self.my_expr
-
-        self.my_expr = sub(r'(\d+)([a-z]+)', self.modify, (self.my_expr))
-        self.my_expr = sub(r'([a-zA-Z]+)(\d+)', self.modify_again, (self.my_expr))
-        self.my_expr = sub(r'->', ',', self.my_expr)
-
-        if match(r'0/0', self.my_expr):
-            self.my_expr = "Undefined Value"
-            return 0
-
-        elif match(r'(\d+)([a-z]+)', self.my_expr):
-            self.my_expr = "Math Error!"
-            return 0
-
-        elif match(r'^[*/+-]', self.my_expr):
-            self.my_expr = str(0)
-            return 0
-
-        expression = str(self.my_expr)
-        try:
-            self.my_expr = str(smp.simplify(expression))
-        except TypeError:
-            self.my_expr = "MATH ERROR!"
-        except SyntaxError:
-            self.my_expr = "MATH ERROR!"
-            return None
-
-        if "**" in self.my_expr:
-            self.my_expr = self.my_expr.replace("**", "^")
-        elif "*" in self.my_expr:
-            self.my_expr = self.my_expr.replace("*", "")
-
-    def on_close(self):
-        quit()
-
-    def on_clear(self):
-        self.my_expr = ''
-
-
-class MathmapaApp(App):
-    def build(self):
-        self.title = "Algebraic Terms"
-
-
-if __name__ == "__main__":
-    MathmapaApp().run()
+if __name__ == '__main__':
+    app.run(port=8080, debug=True)
